@@ -1,21 +1,6 @@
 <template>
   <div id="app">
-    <div
-      id="g_id_onload"
-      data-client_id=""
-      data-context="signin"
-      data-ux_mode="popup"
-      data-login_uri="http://localhost:8080"
-      data-auto_prompt="false"
-    ></div>
-    <div
-      class="g_id_signin"
-      data-type="icon"
-      data-shape="circle"
-      data-theme="outline"
-      data-text="signin_with"
-      data-size="large"
-    ></div>
+    <button @click="signIn">sgin in</button>
   </div>
 </template>
 
@@ -23,31 +8,24 @@
 /* eslint-disable */
 
 export default {
-  mounted() {
-    google.accounts.id.initialize({
-      client_id:
-        "419276155718-s91buqp4ohlgfitr1e6pig5mjs14p53c.apps.googleusercontent.com",
-      callback: this.handleCredentialResponse,
-    });
-    google.accounts.id.prompt();
-  },
+  data: () => ({
+    auth2: null,
+  }),
   methods: {
-    handleCredentialResponse(response) {
-      console.log(response);
-      console.log(this.parseJwt(response.credential));
+    async signIn() {
+      const googleUser = await this.auth2.signIn();
+      const profile = googleUser.getBasicProfile();
+      console.log("ID: " + profile.getId());
+      console.log("Name: " + profile.getName());
+      console.log("Image URL: " + profile.getImageUrl());
+      console.log("Email: " + profile.getEmail());
     },
-    parseJwt(token) {
-      const base64Url = token.split(".")[1];
-      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-      const jsonPayload = decodeURIComponent(
-        window
-          .atob(base64)
-          .split("")
-          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-          .join("")
-      );
-      return JSON.parse(jsonPayload);
-    },
+  },
+  mounted() {
+    gapi.load("auth2", () => {
+      gapi.auth2.init();
+      this.auth2 = gapi.auth2.getAuthInstance();
+    });
   },
 };
 </script>
