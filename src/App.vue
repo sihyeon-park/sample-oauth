@@ -1,6 +1,14 @@
 <template>
   <div id="app">
-    <button @click="signIn">sgin in</button>
+    <div
+      class="g_id_signin"
+      data-type="standard"
+      data-shape="rectangular"
+      data-theme="outline"
+      data-text="signin_with"
+      data-size="large"
+      data-logo_alignment="left"
+    ></div>
   </div>
 </template>
 
@@ -8,24 +16,37 @@
 /* eslint-disable */
 
 export default {
-  data: () => ({
-    auth2: null,
-  }),
-  methods: {
-    async signIn() {
-      const googleUser = await this.auth2.signIn();
-      const profile = googleUser.getBasicProfile();
-      console.log("ID: " + profile.getId());
-      console.log("Name: " + profile.getName());
-      console.log("Image URL: " + profile.getImageUrl());
-      console.log("Email: " + profile.getEmail());
-    },
-  },
   mounted() {
-    gapi.load("auth2", () => {
-      gapi.auth2.init();
-      this.auth2 = gapi.auth2.getAuthInstance();
+    google.accounts.id.initialize({
+      client_id:
+        "419276155718-s91buqp4ohlgfitr1e6pig5mjs14p53c.apps.googleusercontent.com",
+      callback: this.handleCredentialResponse,
     });
+  },
+  methods: {
+    handleCredentialResponse(response) {
+      console.log(this.parseJwt(response.credential));
+    },
+    parseJwt(token) {
+      const [header, payload] = token.split(".");
+      const headerBase64 = header.replace(/-/g, "+").replace(/_/g, "/");
+      const payloadBase64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonHeader = decodeURIComponent(
+        window
+          .atob(headerBase64)
+          .split("")
+          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+          .join("")
+      );
+      const jsonPayload = decodeURIComponent(
+        window
+          .atob(payloadBase64)
+          .split("")
+          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+          .join("")
+      );
+      return [token, JSON.parse(jsonHeader), JSON.parse(jsonPayload)];
+    },
   },
 };
 </script>
