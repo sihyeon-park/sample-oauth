@@ -1,17 +1,23 @@
-import Vue from 'vue'
-import Vuex from 'vuex'
+/* eslint-disable */
+import Vue from "vue";
+import Vuex from "vuex";
 
-Vue.use(Vuex)
+Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
+    access_token: null,
+    refresh_token: null,
+    uuid: null,
   },
-  getters: {
-  },
+  getters: {},
   mutations: {
+    setAuth(state, { access_token, refresh_token, uuid }) {
+      state.access_token = access_token;
+      state.refresh_token = refresh_token;
+      state.uuid = uuid;
+    },
   },
-  actions: {
-  },
-  modules: {
-  }
-})
+  actions: {},
+  modules: {},
+});
