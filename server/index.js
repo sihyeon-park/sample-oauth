@@ -2,8 +2,11 @@
 const express = require("express");
 require("dotenv").config({ path: "../.env.local" });
 const { google } = require("googleapis");
+const { OAuth2Client } = require("google-auth-library");
+const jwt = require("jsonwebtoken");
 const cors = require("cors");
 const url = require("url");
+const https = require("https");
 
 const app = express();
 const port = 3000;
@@ -50,8 +53,8 @@ app.get("/oauth2callback", async (req, res) => {
 });
 
 app.post("/groups", async (req, res) => {
-  const tokens = req.body;
-  oauth2Client.setCredentials(tokens);
+  const token = req.body;
+  oauth2Client.setCredentials(token);
   const script = google.script({ version: "v1", auth: oauth2Client });
   const { data } = await script.scripts.run({
     scriptId:
@@ -63,6 +66,60 @@ app.post("/groups", async (req, res) => {
     },
   });
   res.json(data);
+});
+
+app.post("/refreshToken", async (req, res) => {
+  const token = req.body;
+  oauth2Client.setCredentials(token);
+  const { credentials } = await oauth2Client.refreshAccessToken();
+  res.json({ access_token: credentials.access_token });
+});
+
+app.get("/revoke", async (req, res) => {
+  const token = url.parse(req.url, true).query.token;
+  const postData = "token=" + token;
+  const postOptions = {
+    host: "oauth2.googleapis.com",
+    port: "443",
+    path: "/revoke",
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "Content-Length": Buffer.byteLength(postData),
+    },
+  };
+  const postReq = https.request(postOptions, function (resolve) {
+    resolve.setEncoding("utf8");
+    let responseBody = "";
+    resolve.on("data", (d) => {
+      responseBody += d;
+    });
+    resolve.on("end", () => {
+      res.json(JSON.parse(responseBody));
+    });
+  });
+  postReq.on("error", (err) => {
+    reject(err);
+  });
+
+  postReq.write(postData);
+  postReq.end();
+});
+
+//Sign In With Google에서 사용
+app.get("/verifyIdToken", async (req, res) => {
+  try {
+    const token = url.parse(req.url, true).query.token;
+    const client = new OAuth2Client(process.env.CLIENT_ID);
+    const tiket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.CLIENT_ID,
+    });
+    const payload = tiket.getPayload();
+    res.json(payload);
+  } catch (err) {
+    console.error("Error:: ", err);
+  }
 });
 
 app.listen(port, () => {

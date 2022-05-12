@@ -13,9 +13,10 @@ export default new Vuex.Store({
   getters: {},
   mutations: {
     setAuth(state, { access_token, refresh_token, uuid }) {
-      state.access_token = access_token;
-      state.refresh_token = refresh_token;
-      state.uuid = uuid;
+      console.log(access_token);
+      state.access_token = access_token ? access_token : state.access_token;
+      state.refresh_token = refresh_token ? refresh_token : state.refresh_token;
+      state.uuid = uuid ? uuid : state.uuid;
     },
   },
   actions: {},

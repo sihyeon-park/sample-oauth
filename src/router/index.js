@@ -1,13 +1,19 @@
 /* eslint-disable */
 import VueRouter from "vue-router";
 
-import SignIn from "@/views/SignIn.vue";
+import OAuth from "@/views/OAuth.vue";
+import SignInWithGoogle from "@/views/SignInWithGoogle.vue";
 
 const routes = [
   {
     path: "/",
-    component: SignIn,
-    name: "SignIn",
+    component: OAuth,
+    name: "OAuth",
+  },
+  {
+    path: "/sign-in-with-google",
+    component: SignInWithGoogle,
+    name: "SignInWithGoogle",
   },
 ];
 
