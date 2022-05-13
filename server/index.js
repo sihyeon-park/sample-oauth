@@ -7,9 +7,16 @@ const jwt = require("jsonwebtoken");
 const cors = require("cors");
 const url = require("url");
 const https = require("https");
+const redis = require("redis");
+
+const port = 3000;
+const redis_port = 6379;
 
 const app = express();
-const port = 3000;
+const redis_client = redis.createClient({
+  host: "127.0.0.1",
+  port: redis_port,
+});
 
 app.use(cors());
 app.use(express.json());
@@ -52,9 +59,20 @@ app.get("/oauth2callback", async (req, res) => {
   res.end();
 });
 
-app.post("/groups", async (req, res) => {
-  const token = req.body;
-  oauth2Client.setCredentials(token);
+const checkGroupCache = async (req, res, next) => {
+  const { access_token } = req.body;
+  const value = await redis_client.get(access_token);
+  if (value === null) {
+    next();
+    return;
+  }
+  const result = JSON.parse(value);
+  res.json(result);
+};
+
+app.post("/groups", checkGroupCache, async (req, res) => {
+  const { access_token } = req.body;
+  oauth2Client.setCredentials({ access_token });
   const script = google.script({ version: "v1", auth: oauth2Client });
   const { data } = await script.scripts.run({
     scriptId:
@@ -65,6 +83,7 @@ app.post("/groups", async (req, res) => {
       devMode: false,
     },
   });
+  await redis_client.set(access_token, JSON.stringify(data), { EX: 10 });
   res.json(data);
 });
 
@@ -122,6 +141,9 @@ app.get("/verifyIdToken", async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log("server start");
-});
+(async () => {
+  await redis_client.connect();
+  app.listen(port, () => {
+    console.log("server start");
+  });
+})();
