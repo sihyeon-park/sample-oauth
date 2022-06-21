@@ -4,6 +4,8 @@
     <button v-if="idToken !== null" @click="verifyIdToken">
       verifyIdToken
     </button>
+    <button v-if="idToken !== null" @click="revoke">revoke</button>
+    <button v-if="idToken !== null" @click="onSignout">sign out</button>
     <section class="user-info">
       <p>Id Token: {{ idToken }}</p>
       <p>name: {{ name }}</p>
@@ -78,5 +80,9 @@ export default {
   width: 500px;
   overflow: hidden;
   word-wrap: break-word;
+}
+
+.sign-in-button {
+  margin-bottom: 10px;
 }
 </style>

@@ -1,14 +1,18 @@
 <template>
   <section class="sign-in">
-    <a href="http://localhost:3000/auth">Sign In</a>
+    <button>
+      <a href="http://localhost:3000/auth">Sign In</a>
+    </button>
     <section class="auth-info">
       <p>accessToken: {{ access_token }}</p>
       <p>refreshToekn: {{ refresh_token }}</p>
       <p>uuid: {{ uuid }}</p>
     </section>
-    <button @click="refreshAccessToken">refreshAccessToken</button>
-    <button @click="revoke">revoke</button>
-    <button @click="getGroups">getGroups</button>
+    <div class="btn-wrapper" v-if="uuid">
+      <button @click="refreshAccessToken">refreshAccessToken</button>
+      <button @click="revoke">revoke</button>
+      <button @click="getGroups">getGroups</button>
+    </div>
     <h3>group emails</h3>
     <section v-loading="loading">
       <p v-for="email in groupEmails" :key="email">{{ email }}</p>
