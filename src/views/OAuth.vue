@@ -50,26 +50,40 @@ export default {
         const { response } = await res.json();
         this.groupEmails = response.result;
       } catch (err) {
+        alert("FAIL:: get groups");
       } finally {
         this.loading = false;
       }
     },
     async refreshAccessToken() {
-      const res = await fetch(`http://localhost:3000/refreshToken`, {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          refresh_token: this.refresh_token,
-        }),
-      });
-      const result = await res.json();
-      this.setAuth(result);
+      if (this.refresh_token === null) {
+        alert("FAIL:: refresh token이 없습니다.");
+        return;
+      }
+      try {
+        const res = await fetch(`http://localhost:3000/refreshToken`, {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            refresh_token: this.refresh_token,
+          }),
+        });
+        const result = await res.json();
+        this.setAuth(result);
+      } catch (e) {
+        alert("FAIL:: server error.");
+      }
     },
     async revoke() {
-      await fetch(`http://localhost:3000/revoke?token=${this.access_token}`);
+      try {
+        await fetch(`http://localhost:3000/revoke?token=${this.access_token}`);
+        alert("SUCCESS:: revoke token");
+      } catch (e) {
+        alert("FAIL:: revoke token");
+      }
     },
   },
   async created() {
@@ -84,6 +98,7 @@ export default {
   width: 500px;
   overflow: hidden;
   word-wrap: break-word;
+
   p:not(:last-child) {
     margin-bottom: 10px;
   }

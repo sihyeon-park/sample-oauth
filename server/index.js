@@ -33,9 +33,9 @@ const authorizationUrl = oauth2Client.generateAuthUrl({
   scope: scopes,
   include_granted_scopes: true,
 });
+
 app.get("/auth", (req, res) => {
-  res.writeHead(301, { Location: authorizationUrl });
-  res.end();
+  res.redirect(301, authorizationUrl);
 });
 
 app.get("/oauth2callback", async (req, res) => {
@@ -46,15 +46,15 @@ app.get("/oauth2callback", async (req, res) => {
     const uuid = info.sub;
     res.redirect(
       url.format({
-        pathname: "http://localhost:8080/",
+        pathname: "http://localhost:8081/",
         query: {
           ...tokens,
           uuid,
         },
       })
     );
-  } catch (error) {
-    console.error(error);
+  } catch (e) {
+    console.error("Error:: ", e);
   }
   res.end();
 });
@@ -74,24 +74,32 @@ app.post("/groups", checkGroupCache, async (req, res) => {
   const { access_token } = req.body;
   oauth2Client.setCredentials({ access_token });
   const script = google.script({ version: "v1", auth: oauth2Client });
-  const { data } = await script.scripts.run({
-    scriptId:
-      "AKfycbyJe_mttGc5gCIWYS4a2SWVeZhqYtubz1tcjxW-2wNrYzihq-pztZxHxG1d5NYuGwoI",
-    requestBody: {
-      function: "listMyGroupEmails",
-      parameters: [],
-      devMode: false,
-    },
-  });
-  await redis_client.set(access_token, JSON.stringify(data), { EX: 10 });
-  res.json(data);
+  try {
+    const { data } = await script.scripts.run({
+      scriptId:
+        "AKfycbyJe_mttGc5gCIWYS4a2SWVeZhqYtubz1tcjxW-2wNrYzihq-pztZxHxG1d5NYuGwoI",
+      requestBody: {
+        function: "listMyGroupEmails",
+        parameters: [],
+        devMode: false,
+      },
+    });
+    await redis_client.set(access_token, JSON.stringify(data), { EX: 10 });
+    res.json(data);
+  } catch (e) {
+    console.error("Error:: ", e);
+  }
 });
 
 app.post("/refreshToken", async (req, res) => {
-  const token = req.body;
-  oauth2Client.setCredentials(token);
-  const { credentials } = await oauth2Client.refreshAccessToken();
-  res.json({ access_token: credentials.access_token });
+  try {
+    const token = req.body;
+    oauth2Client.setCredentials(token);
+    const { credentials } = await oauth2Client.refreshAccessToken();
+    res.json({ access_token: credentials.access_token });
+  } catch (e) {
+    console.error("Error:: ", e);
+  }
 });
 
 app.get("/revoke", async (req, res) => {
@@ -117,8 +125,8 @@ app.get("/revoke", async (req, res) => {
       res.json(JSON.parse(responseBody));
     });
   });
-  postReq.on("error", (err) => {
-    reject(err);
+  postReq.on("error", (e) => {
+    console.error("Error:: ", e);
   });
 
   postReq.write(postData);
@@ -136,14 +144,18 @@ app.get("/verifyIdToken", async (req, res) => {
     });
     const payload = tiket.getPayload();
     res.json(payload);
-  } catch (err) {
-    console.error("Error:: ", err);
+  } catch (e) {
+    console.error("Error:: ", e);
   }
 });
 
 (async () => {
-  await redis_client.connect();
-  app.listen(port, () => {
-    console.log("server start");
-  });
+  try {
+    await redis_client.connect();
+    app.listen(port, () => {
+      console.log(`server start. ${port} port`);
+    });
+  } catch (e) {
+    console.error("Error:: ", e);
+  }
 })();

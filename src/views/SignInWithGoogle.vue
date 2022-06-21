@@ -27,6 +27,7 @@ export default {
   methods: {
     handleCredentialResponse(response) {
       const idToken = response.credential;
+      const select_by = response.select_by;
       const [token, header, payload] = this.parseJwt(idToken);
       this.idToken = token;
       this.name = payload.name;
@@ -34,12 +35,15 @@ export default {
       this.uuid = payload.sub;
     },
     async verifyIdToken() {
-      console.log("start");
-      const res = await fetch(
-        `http://localhost:3000/verifyIdToken?token=${this.idToken}`
-      );
-      const result = await res.json();
-      console.log(result);
+      try {
+        const res = await fetch(
+          `http://localhost:3000/verifyIdToken?token=${this.idToken}`
+        );
+        const result = await res.json();
+        alert(result);
+      } catch (e) {
+        alert("FAIL:: verify id token");
+      }
     },
     parseJwt(token) {
       const [header, payload] = token.split(".");
@@ -61,17 +65,31 @@ export default {
       );
       return [token, JSON.parse(jsonHeader), JSON.parse(jsonPayload)];
     },
-  },
-  mounted() {
-    this.$nextTick(() => {
+    initGoogleAcounts() {
       google.accounts.id.initialize({
         client_id:
           "419276155718-s91buqp4ohlgfitr1e6pig5mjs14p53c.apps.googleusercontent.com",
         callback: this.handleCredentialResponse,
         auto_select: true,
       });
+      google.accounts.id.renderButton(this.$refs.signIn, { type: "standard" });
       google.accounts.id.prompt();
-    });
+    },
+    revoke() {
+      google.accounts.id.revoke(this.uuid, (response) => {
+        if (response.successful) {
+          alert("SUCCESS:: revoke token");
+        } else {
+          alert("FAIL:: revoke token");
+        }
+      });
+    },
+    onSignout() {
+      google.accounts.id.disableAutoSelect();
+    },
+  },
+  mounted() {
+    this.initGoogleAcounts();
   },
 };
 </script>
