@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <nav>
-      <router-link to="/">OAuth2.0</router-link>
+      <router-link to="/oauth">OAuth2.0</router-link>
       <router-link to="/sign-in-with-google">Sign In With</router-link>
     </nav>
     <router-view />

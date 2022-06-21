@@ -7,8 +7,12 @@ import SignInWithGoogle from "@/views/SignInWithGoogle.vue";
 const routes = [
   {
     path: "/",
+    redirect: "/oauth",
+  },
+  {
+    path: "/oauth",
     component: OAuth,
-    name: "OAuth",
+    name: "oauth",
   },
   {
     path: "/sign-in-with-google",
