@@ -1,0 +1,28 @@
+version: "3.8"
+services:
+  client:
+    image: "node:16"
+    ports:
+      - "8081:8081"
+    command: sh -c "npm i --force && npm run serve"
+    restart: always
+    working_dir: /app
+    volumes:
+      - ./:/app
+  redis-server:
+    image: "redis"
+    restart: always
+  server:
+    image: "node:16"
+    depends_on:
+      - redis-server
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.local
+    command: sh -c "npm i --force && node ./server/index.js"
+    restart: always
+    working_dir: /app
+    volumes:
+      - ./:/app
+

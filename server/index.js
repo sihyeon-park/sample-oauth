@@ -14,8 +14,7 @@ const redis_port = 6379;
 
 const app = express();
 const redis_client = redis.createClient({
-  host: "127.0.0.1",
-  port: redis_port,
+  url: "redis://sample-oauth_redis-server_1:6379",
 });
 
 app.use(cors());
